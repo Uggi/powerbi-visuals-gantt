@@ -23,10 +23,10 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-import * as d3 from "d3";
+import { Selection as d3Selection } from "d3-selection";
 import * as _ from "lodash";
 
-type Selection<T1, T2 = T1> = d3.Selection<any, T1, any, T2>;
+type Selection<T1, T2 = T1> = d3Selection<any, T1, any, T2>;
 
 import { interactivityBaseService as interactivityService } from "powerbi-visuals-utils-interactivityutils";
 import IInteractiveBehavior = interactivityService.IInteractiveBehavior;
@@ -74,22 +74,22 @@ export class Behavior implements IInteractiveBehavior {
 
     public bindEvents(options: BehaviorOptions, selectionHandler: ISelectionHandler) {
         this.options = options;
-        let clearCatcher = options.clearCatcher;
+        const clearCatcher = options.clearCatcher;
 
-        options.taskSelection.on("click", (dataPoint: Task) => {
-            const event: MouseEvent = d3.event as MouseEvent;
+        options.taskSelection.on("click", (mouseEvent, dataPoint: Task) => {
+            const event: MouseEvent = mouseEvent as MouseEvent;
             selectionHandler.handleSelection(dataPoint, event.ctrlKey);
 
             event.stopPropagation();
         });
 
-        options.legendSelection.on("click", (d: any) => {
+        options.legendSelection.on("click", (event, d: any) => {
             if (!d.selected) {
 
-                selectionHandler.handleSelection(d, getEvent().ctrlKey);
-                (d3.event as MouseEvent).stopPropagation();
+                selectionHandler.handleSelection(d, event.ctrlKey);
+                (event as MouseEvent).stopPropagation();
 
-                let selectedType: string = d.tooltip;
+                const selectedType: string = d.tooltipInfo;
                 options.taskSelection.each((d: Task) => {
                     if (d.taskType === selectedType && d.parent && !d.selected) {
                         selectionHandler.handleSelection(d, getEvent().ctrlKey);
@@ -100,17 +100,17 @@ export class Behavior implements IInteractiveBehavior {
             }
         });
 
-        options.subTasksCollapse.selection.on("click", (d: GroupedTask) => {
+        options.subTasksCollapse.selection.on("click", (event, d: GroupedTask) => {
             if (!_.flatten(d.tasks.map(task => task.children)).length) {
                 return;
             }
 
-            (d3.event as MouseEvent).stopPropagation();
+            (event as MouseEvent).stopPropagation();
             options.subTasksCollapse.callback(d);
         });
 
-        options.allSubtasksCollapse.selection.on("click", () => {
-            (d3.event as MouseEvent).stopPropagation();
+        options.allSubtasksCollapse.selection.on("click", (event) => {
+            (event as MouseEvent).stopPropagation();
             options.allSubtasksCollapse.callback();
         });
 
